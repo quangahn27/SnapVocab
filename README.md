@@ -54,3 +54,9 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+// Source - https://stackoverflow.com/a/46170797
+// Posted by Pedram, modified by community. See post 'Timeline' for change history
+// Retrieved 2026-09-25, License - CC BY-SA 4.0
+
+keytool -genkey -v -keystore snapVocab.keystore -alias snapVocab-alias -keyalg RSA -keysize 2048 -validity 10000
+123456

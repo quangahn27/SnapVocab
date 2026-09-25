@@ -1,5 +1,18 @@
 This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
 
+## Project overview
+
+**SnapVocab** — take or pick a photo, and Gemini identifies 3–5 useful English vocabulary words for the objects visible in it (IPA, Vietnamese translation, example sentence pair, and a Vietnamese narration), for Vietnamese learners of English. Everything runs client-side; there is **no backend/server**.
+
+- `src/app/index.tsx` — the single main screen. Drives one local state machine: `EMPTY → PREVIEW → ANALYZING → RESULT`, with `ERROR` reachable from any step.
+- `src/services/image.ts` — camera/library picking (`expo-image-picker`) and resize/compress-to-base64 (`expo-image-manipulator`, max edge 1280px, JPEG q0.75) before sending to Gemini.
+- `src/services/gemini.ts` — calls the Gemini REST API (`generativelanguage.googleapis.com`) directly from the app using `EXPO_PUBLIC_GEMINI_API_KEY` + `EXPO_PUBLIC_GEMINI_MODEL` (see `.env.example`). Response is validated with `zod`. **Known accepted tradeoff:** `EXPO_PUBLIC_*` vars are bundled into the client and extractable from a production build — fine for this MVP/prototype stage only; a real release needs a backend proxy so the key isn't shipped to devices.
+- `src/services/speech.ts` — wraps `expo-speech` to play word → meaning → example → translation sequences (single item or "Nghe toàn bộ" for all items), with a generation counter so a new playback request cancels an in-flight one instead of overlapping audio.
+- `src/constants/analysisPrompt.ts` — the Gemini prompt and the `responseSchema` (Gemini's schema dialect is a JSON Schema subset without `additionalProperties`, so item shape is re-validated locally via zod in `gemini.ts`).
+- `src/types/vocabulary.ts` — shared `VocabularyItem` / `ImageAnalysisResult` types.
+- Error handling: `AnalysisError` (gemini.ts) and `ImagePickError` (image.ts) carry a code + a user-facing Vietnamese message rendered by `ErrorState`. All caught failures go through `src/services/logger.ts` (`logError`), which both `console.error`s and appends a JSON line (`{time, scope, message, ...meta}`) to a local file (`documentDirectory/snapvocab-error-log.txt`, capped at 256KB) via `expo-file-system`'s new `File`/`Paths` API — so errors survive past the current app/Metro session. `readErrorLog()`/`clearErrorLog()` are there for a future debug screen; nothing reads the log yet.
+- Bundle/package id: `com.quangahn.x27.SnapVocab` (both iOS and Android, see `app.json`).
+
 ## Expo has changed — do not trust your training data
 
 Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:

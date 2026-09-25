@@ -1,98 +1,335 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
+import { useEffect, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { AnalysisLoading } from '@/components/AnalysisLoading';
+import { ErrorState } from '@/components/ErrorState';
+import { ImagePickerCard } from '@/components/ImagePickerCard';
+import { ImagePreview } from '@/components/ImagePreview';
+import { PrimaryButton } from '@/components/PrimaryButton';
+import { VocabularyCard } from '@/components/VocabularyCard';
+import { SnapVocabColors } from '@/constants/colors';
+import { AnalysisError, analyzeImage } from '@/services/gemini';
+import {
+  ImagePickError,
+  pickImageFromCamera,
+  pickImageFromLibrary,
+  processImageForAnalysis,
+  type PickedAsset,
+} from '@/services/image';
+import { logError } from '@/services/logger';
+import { speakAll, speakEnglish, stopSpeaking } from '@/services/speech';
+import type { ImageAnalysisResult } from '@/types/vocabulary';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
+const GENERIC_ERROR_MESSAGE = 'Không thể phân tích ảnh lúc này. Vui lòng thử lại.';
+const CONTENT_MAX_WIDTH = 480;
+
+type SelectedImage = {
+  uri: string;
+  base64: string;
+};
+
+export default function SnapVocabScreen() {
+  const [selectedImage, setSelectedImage] = useState<SelectedImage | null>(null);
+  const [result, setResult] = useState<ImageAnalysisResult | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isPicking, setIsPicking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      stopSpeaking();
+    };
+  }, []);
+
+  async function handlePick(source: 'camera' | 'library') {
+    if (isPicking || isAnalyzing) return;
+    setIsPicking(true);
+    setError(null);
+    try {
+      const asset: PickedAsset | null =
+        source === 'camera' ? await pickImageFromCamera() : await pickImageFromLibrary();
+      if (!asset) return;
+
+      stopSpeaking();
+      const processed = await processImageForAnalysis(asset);
+      setResult(null);
+      setSelectedImage({ uri: processed.uri, base64: processed.base64 });
+    } catch (err) {
+      setSelectedImage(null);
+      setResult(null);
+      if (err instanceof ImagePickError) {
+        setError(err.message);
+      } else {
+        logError('screen.imagePick', err);
+        setError(GENERIC_ERROR_MESSAGE);
+      }
+    } finally {
+      setIsPicking(false);
+    }
   }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
+
+  async function handleAnalyze() {
+    if (!selectedImage || isAnalyzing) return;
+    setIsAnalyzing(true);
+    setError(null);
+    try {
+      const data = await analyzeImage(selectedImage.base64, 'image/jpeg');
+      setResult(data);
+    } catch (err) {
+      if (err instanceof AnalysisError) {
+        setError(err.message);
+      } else {
+        logError('screen.analyze', err);
+        setError(GENERIC_ERROR_MESSAGE);
+      }
+    } finally {
+      setIsAnalyzing(false);
+    }
   }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+
+  function handleReset() {
+    stopSpeaking();
+    setSelectedImage(null);
+    setResult(null);
+    setError(null);
+    setIsAnalyzing(false);
+  }
+
+  function handleRetry() {
+    setError(null);
+    if (selectedImage) {
+      handleAnalyze();
+    }
+  }
+
+  const screenState: 'EMPTY' | 'PREVIEW' | 'ANALYZING' | 'RESULT' | 'ERROR' = error
+    ? 'ERROR'
+    : isAnalyzing
+      ? 'ANALYZING'
+      : result
+        ? 'RESULT'
+        : selectedImage
+          ? 'PREVIEW'
+          : 'EMPTY';
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <ScrollView contentContainerStyle={styles.scrollOuter} keyboardShouldPersistTaps="handled">
+        <View style={styles.content}>
+          {screenState === 'RESULT' && result ? (
+            <View style={styles.resultHeaderRow}>
+              <Pressable
+                onPress={handleReset}
+                accessibilityRole="button"
+                accessibilityLabel="Quay lại"
+                hitSlop={8}
+                style={styles.backButton}>
+                <Text style={styles.backArrow}>←</Text>
+              </Pressable>
+              <View style={styles.resultHeaderTextColumn}>
+                <Text style={styles.resultLabel}>KẾT QUẢ</Text>
+                <Text style={styles.headline}>Từ vựng trong ảnh</Text>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.header}>
+              <Text style={styles.appTitle}>SnapVocab</Text>
+              {screenState === 'EMPTY' && (
+                <Text style={styles.appSubtitle}>Học tiếng Anh từ thế giới xung quanh bạn.</Text>
+              )}
+            </View>
+          )}
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+          {screenState === 'EMPTY' && (
+            <View style={styles.section}>
+              <Text style={styles.headline}>Bạn muốn học gì hôm nay?</Text>
+              <Text style={styles.description}>
+                Chụp một bức ảnh hoặc chọn ảnh có sẵn. SnapVocab sẽ tìm những từ tiếng Anh hữu ích
+                trong ảnh.
+              </Text>
+              <ImagePickerCard
+                onPickCamera={() => handlePick('camera')}
+                onPickLibrary={() => handlePick('library')}
+                disabled={isPicking}
+              />
+            </View>
+          )}
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+          {(screenState === 'PREVIEW' || screenState === 'ANALYZING') && selectedImage && (
+            <View style={styles.section}>
+              <ImagePreview
+                uri={selectedImage.uri}
+                onChangeImage={() => handlePick('library')}
+                disabled={isAnalyzing || isPicking}
+              />
+              <Text style={styles.headline}>Sẵn sàng khám phá?</Text>
+              <Text style={styles.description}>
+                AI sẽ tìm tối đa 5 từ tiếng Anh hữu ích trong bức ảnh này.
+              </Text>
+              {screenState === 'ANALYZING' ? (
+                <AnalysisLoading />
+              ) : (
+                <>
+                  <PrimaryButton label="✨ Phân tích ảnh" onPress={handleAnalyze} disabled={isPicking} />
+                  <PrimaryButton
+                    label="Chọn ảnh khác"
+                    variant="text"
+                    onPress={() => handlePick('library')}
+                    disabled={isPicking}
+                  />
+                </>
+              )}
+            </View>
+          )}
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+          {screenState === 'RESULT' && result && (
+            <View style={styles.section}>
+              <Text style={styles.foundCount}>{result.items.length} từ được tìm thấy</Text>
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+              {selectedImage && (
+                <Image source={{ uri: selectedImage.uri }} style={styles.resultImage} contentFit="cover" />
+              )}
+
+              <View style={styles.summaryCard}>
+                <View style={styles.summaryHeaderRow}>
+                  <Text style={styles.summaryIcon}>🔊</Text>
+                  <Text style={styles.summaryTitle}>Nghe toàn bộ</Text>
+                </View>
+                <Text style={styles.summaryNarrative}>{result.full_narrative}</Text>
+                <PrimaryButton
+                  label="▶ Nghe"
+                  variant="secondary"
+                  onPress={() => speakAll(result.items)}
+                />
+              </View>
+
+              {result.items.map((item, index) => (
+                <VocabularyCard
+                  key={`${item.english}-${index}`}
+                  item={item}
+                  onSpeakWord={speakEnglish}
+                  onSpeakExample={speakEnglish}
+                />
+              ))}
+
+              <PrimaryButton label="Phân tích ảnh khác" onPress={handleReset} />
+            </View>
+          )}
+
+          {screenState === 'ERROR' && (
+            <View style={styles.section}>
+              <ErrorState message={error ?? GENERIC_ERROR_MESSAGE} onRetry={handleRetry} />
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
   safeArea: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    backgroundColor: SnapVocabColors.background,
   },
-  heroSection: {
+  scrollOuter: {
+    flexGrow: 1,
+    alignItems: 'center',
+    paddingBottom: 32,
+  },
+  content: {
+    width: '100%',
+    maxWidth: CONTENT_MAX_WIDTH,
+    paddingHorizontal: 20,
+    gap: 24,
+  },
+  header: {
+    paddingTop: 24,
+    gap: 8,
+  },
+  appTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: SnapVocabColors.text,
+  },
+  appSubtitle: {
+    fontSize: 16,
+    color: SnapVocabColors.textSecondary,
+  },
+  resultHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingTop: 12,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+    marginLeft: -12,
   },
-  title: {
-    textAlign: 'center',
+  backArrow: {
+    fontSize: 22,
+    color: SnapVocabColors.text,
   },
-  code: {
-    textTransform: 'uppercase',
+  resultHeaderTextColumn: {
+    gap: 2,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  resultLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    color: SnapVocabColors.textSecondary,
+  },
+  section: {
+    gap: 16,
+  },
+  headline: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: SnapVocabColors.text,
+  },
+  description: {
+    fontSize: 15,
+    color: SnapVocabColors.textSecondary,
+    lineHeight: 22,
+  },
+  foundCount: {
+    fontSize: 15,
+    color: SnapVocabColors.textSecondary,
+  },
+  resultImage: {
+    width: '100%',
+    aspectRatio: 1.6,
+    borderRadius: 20,
+  },
+  summaryCard: {
+    backgroundColor: SnapVocabColors.card,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: SnapVocabColors.border,
+    padding: 18,
+    gap: 12,
+  },
+  summaryHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  summaryIcon: {
+    fontSize: 18,
+  },
+  summaryTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: SnapVocabColors.text,
+  },
+  summaryNarrative: {
+    fontSize: 15,
+    color: SnapVocabColors.text,
+    lineHeight: 22,
   },
 });

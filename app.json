@@ -34,6 +34,14 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "SnapVocab cần quyền truy cập thư viện ảnh để bạn chọn ảnh học từ vựng.",
+          "cameraPermission": "SnapVocab cần quyền truy cập camera để bạn chụp ảnh học từ vựng.",
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {
