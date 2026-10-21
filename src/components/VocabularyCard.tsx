@@ -1,12 +1,16 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { SnapVocabColors } from '@/constants/colors';
+import type { TargetLanguage } from '@/constants/languages';
 import type { VocabularyItem } from '@/types/vocabulary';
 
 type VocabularyCardProps = {
   item: VocabularyItem;
+  language: TargetLanguage;
   onSpeakWord: (text: string) => void;
   onSpeakExample: (text: string) => void;
+  /** Hides the speaker buttons when the device has no voice for this language. */
+  speechAvailable?: boolean;
 };
 
 function SpeakerButton({ onPress, accessibilityLabel }: { onPress: () => void; accessibilityLabel: string }) {
@@ -22,18 +26,31 @@ function SpeakerButton({ onPress, accessibilityLabel }: { onPress: () => void; a
   );
 }
 
-export function VocabularyCard({ item, onSpeakWord, onSpeakExample }: VocabularyCardProps) {
+export function VocabularyCard({
+  item,
+  language,
+  onSpeakWord,
+  onSpeakExample,
+  speechAvailable = true,
+}: VocabularyCardProps) {
+  // For Japanese/Korean/Chinese the learner cannot read the word itself yet, so
+  // the reading carries the pronunciation and must not be a dim footnote the
+  // way IPA can be under an English word.
+  const readingStyle = language.latinScript ? styles.reading : styles.readingProminent;
+
   return (
     <View style={styles.card}>
       <View style={styles.wordRow}>
         <View style={styles.wordColumn}>
-          <Text style={styles.english}>{item.english}</Text>
-          <Text style={styles.phonetic}>{item.phonetic}</Text>
+          <Text style={styles.word}>{item.word}</Text>
+          <Text style={readingStyle}>{item.reading}</Text>
         </View>
-        <SpeakerButton
-          onPress={() => onSpeakWord(item.english)}
-          accessibilityLabel={`Nghe từ ${item.english}`}
-        />
+        {speechAvailable && (
+          <SpeakerButton
+            onPress={() => onSpeakWord(item.word)}
+            accessibilityLabel={`Nghe từ ${item.word}`}
+          />
+        )}
       </View>
 
       <Text style={styles.vietnamese}>{item.vietnamese}</Text>
@@ -42,13 +59,15 @@ export function VocabularyCard({ item, onSpeakWord, onSpeakExample }: Vocabulary
 
       <View style={styles.exampleRow}>
         <View style={styles.exampleColumn}>
-          <Text style={styles.exampleEn}>{item.example_en}</Text>
+          <Text style={styles.example}>{item.example}</Text>
           <Text style={styles.exampleVi}>{item.example_vi}</Text>
         </View>
-        <SpeakerButton
-          onPress={() => onSpeakExample(item.example_en)}
-          accessibilityLabel={`Nghe câu ví dụ: ${item.example_en}`}
-        />
+        {speechAvailable && (
+          <SpeakerButton
+            onPress={() => onSpeakExample(item.example)}
+            accessibilityLabel={`Nghe câu ví dụ: ${item.example}`}
+          />
+        )}
       </View>
     </View>
   );
@@ -72,13 +91,18 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 4,
   },
-  english: {
+  word: {
     fontSize: 22,
     fontWeight: '700',
     color: SnapVocabColors.text,
   },
-  phonetic: {
+  reading: {
     fontSize: 14,
+    color: SnapVocabColors.primary,
+  },
+  readingProminent: {
+    fontSize: 18,
+    fontWeight: '600',
     color: SnapVocabColors.primary,
   },
   vietnamese: {
@@ -102,7 +126,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 6,
   },
-  exampleEn: {
+  example: {
     fontSize: 15,
     fontWeight: '500',
     color: SnapVocabColors.text,

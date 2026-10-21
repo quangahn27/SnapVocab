@@ -1,12 +1,23 @@
 # SnapVocab
 
-Ứng dụng di động Expo/React Native giúp người Việt học tiếng Anh từ chính những vật thể xung quanh: chụp (hoặc chọn) một tấm ảnh, Gemini AI sẽ nhận diện và trả về 3–5 từ vựng tiếng Anh hữu ích xuất hiện trong ảnh.
+Ứng dụng di động Expo/React Native giúp người Việt học ngoại ngữ từ chính những vật thể xung quanh: chụp (hoặc chọn) một tấm ảnh, Gemini AI sẽ nhận diện và trả về 3–5 từ vựng hữu ích xuất hiện trong ảnh.
 
 ## Ý tưởng chính
 
-Không cần gõ, không cần tra từ điển — chỉ cần chụp ảnh vật thể trong đời sống hằng ngày (bàn, ly nước, con mèo, xe đạp,...) và ứng dụng sẽ tự động trả về danh sách từ vựng liên quan kèm cách phát âm, nghĩa tiếng Việt, câu ví dụ song ngữ và bài đọc tổng hợp bằng giọng nói.
+Không cần gõ, không cần tra từ điển — chỉ cần chụp ảnh vật thể trong đời sống hằng ngày (bàn, ly nước, con mèo, xe đạp,...) và ứng dụng sẽ tự động trả về danh sách từ vựng liên quan kèm cách đọc, nghĩa tiếng Việt, câu ví dụ song ngữ và bài đọc tổng hợp bằng giọng nói.
 
-Toàn bộ xử lý diễn ra **client-side**, không có backend/server riêng — app gọi thẳng tới Gemini REST API.
+**Ngôn ngữ học được chọn trong app** (tiếng Anh, Nhật, Hàn, Trung), còn **phần giải thích luôn bằng tiếng Việt**. Nhờ vậy giao diện app không cần dịch sang nhiều thứ tiếng.
+
+## Kiến trúc
+
+```
+App (Expo)  ──ảnh base64 + ngôn ngữ đích──►  Cloudflare Worker  ──►  Gemini API
+            ◄──── { full_narrative, items } ────┘  (giữ API key, model, prompt)
+```
+
+App **không chứa API key**. Toàn bộ key Gemini, tên model và prompt nằm trong Cloudflare Worker (`worker/snapvocab-proxy.js`); app chỉ biết URL của Worker qua biến `EXPO_PUBLIC_API_URL`.
+
+Hệ quả thực tế: đổi prompt, đổi model, thêm ngôn ngữ mới chỉ cần deploy lại Worker — **không phải phát hành bản app mới**.
 
 ## Luồng sử dụng (state machine)
 
@@ -18,53 +29,94 @@ EMPTY → PREVIEW → ANALYZING → RESULT
           └──────── (chụp/chọn ảnh khác) ──┘
 ```
 
-- **ERROR** có thể xảy ra ở bất kỳ bước nào (lỗi chọn ảnh, lỗi gọi Gemini, lỗi mạng...).
+- **ERROR** có thể xảy ra ở bất kỳ bước nào (lỗi chọn ảnh, lỗi gọi Worker, lỗi mạng, hết lượt...).
 
 Các bước cụ thể:
-1. **EMPTY** — màn hình chào, người dùng chọn "Chụp ảnh" hoặc "Chọn ảnh từ thư viện".
-2. **PREVIEW** — xem trước ảnh đã chọn, có thể đổi ảnh khác hoặc bấm "✨ Phân tích ảnh".
-3. **ANALYZING** — hiển thị trạng thái loading trong lúc gọi Gemini.
+1. **EMPTY** — màn hình chào, chọn ngôn ngữ muốn học, rồi "Chụp ảnh" hoặc "Chọn ảnh từ thư viện".
+2. **PREVIEW** — xem trước ảnh đã chọn, vẫn đổi được ngôn ngữ, có thể đổi ảnh khác hoặc bấm "✨ Phân tích ảnh".
+3. **ANALYZING** — hiển thị trạng thái loading trong lúc gọi Worker.
 4. **RESULT** — hiển thị:
    - Bài tường thuật tổng hợp (`full_narrative`) kèm nút "🔊 Nghe toàn bộ".
    - Danh sách từ vựng dạng thẻ (`VocabularyCard`), mỗi thẻ có thể phát âm từ và câu ví dụ riêng lẻ.
+   - Số lượt còn lại trong ngày, nếu Worker có bật hạn mức.
    - Nút "Phân tích ảnh khác" để quay lại từ đầu.
-5. **ERROR** — hiển thị thông báo lỗi bằng tiếng Việt kèm nút thử lại.
+5. **ERROR** — thông báo lỗi bằng tiếng Việt kèm nút thử lại; nếu bị giới hạn lượt thì nút bị khoá kèm đồng hồ đếm ngược.
 
 ## Chức năng chi tiết
 
+- **Chọn ngôn ngữ muốn học**: tiếng Anh, Nhật, Hàn, Trung (`src/constants/languages.ts`). Lựa chọn được lưu lại trên máy cho lần mở app sau.
 - **Chọn/chụp ảnh**: dùng `expo-image-picker`, hỗ trợ cả camera và thư viện ảnh.
-- **Xử lý ảnh trước khi gửi AI**: resize + nén ảnh về base64 (cạnh dài tối đa 1280px, JPEG chất lượng 0.75) bằng `expo-image-manipulator` để giảm dung lượng gửi lên Gemini.
-- **Phân tích ảnh bằng Gemini**: gọi trực tiếp Gemini REST API (`generativelanguage.googleapis.com`) từ client, dùng API key và tên model cấu hình qua biến môi trường (`EXPO_PUBLIC_GEMINI_API_KEY`, `EXPO_PUBLIC_GEMINI_MODEL`). Kết quả trả về được ép theo `responseSchema` phía Gemini và được validate lại bằng `zod` ở phía client cho chắc chắn.
-- **Đọc từ vựng bằng giọng nói**: dùng `expo-speech` để đọc lần lượt từ → nghĩa → câu ví dụ → bản dịch, cho từng từ riêng lẻ hoặc đọc toàn bộ ("Nghe toàn bộ"). Có cơ chế "generation counter" để yêu cầu đọc mới sẽ hủy audio đang phát dở, tránh chồng tiếng.
-- **Ghi log lỗi cục bộ**: mọi lỗi bắt được đều đi qua `logError` — vừa `console.error`, vừa ghi thêm một dòng JSON (`{time, scope, message, ...}`) vào file log cục bộ (`snapvocab-error-log.txt`, giới hạn 256KB) bằng `expo-file-system`, giúp lỗi còn tồn tại sau khi tắt app/Metro. Đã có sẵn hàm đọc/xóa log để dùng cho màn hình debug trong tương lai (hiện chưa có UI nào đọc log này).
+- **Xử lý ảnh trước khi gửi AI**: resize + nén ảnh về base64 (cạnh dài tối đa 1280px, JPEG chất lượng 0.75) bằng `expo-image-manipulator`. Payload thực tế khoảng 350KB.
+- **Phân tích ảnh**: gửi chuỗi base64 thô (`content-type: text/plain`) lên Worker. Gửi thô thay vì bọc JSON để Worker khỏi phải parse chuỗi lớn — gói Cloudflare free chỉ cho 10ms CPU mỗi request. Kết quả được ép theo `responseSchema` phía Gemini và validate lại bằng `zod` ở client cho chắc chắn.
+- **Đọc từ vựng bằng giọng nói**: dùng `expo-speech` đọc lần lượt từ → nghĩa → câu ví dụ → bản dịch. Mỗi đoạn mang theo mã ngôn ngữ riêng, nên từ tiếng Nhật được đọc bằng giọng Nhật còn phần giải thích bằng giọng Việt. Có cơ chế "generation counter" để yêu cầu đọc mới hủy audio đang phát dở.
+  - **Phần phiên âm (`reading`) không bao giờ được đọc** — nó chỉ để nhìn. Máy đọc nhận `shūbāo` hay `kasa` sẽ phát ra thứ vô nghĩa; thứ đưa cho máy đọc luôn là chữ gốc (`word`).
+  - App kiểm tra `Speech.getAvailableVoicesAsync()` lúc đổi ngôn ngữ. Máy chưa cài giọng cho ngôn ngữ đó thì ẩn nút loa và báo cho người dùng, thay vì phát ra im lặng.
+- **Ghi log lỗi cục bộ**: mọi lỗi bắt được đều đi qua `logError` — vừa `console.warn`, vừa ghi một dòng JSON vào file log cục bộ (`snapvocab-error-log.txt`, giới hạn 256KB) bằng `expo-file-system`, giúp lỗi còn tồn tại sau khi tắt app/Metro.
 
 ## Dữ liệu trả về cho mỗi từ vựng (`VocabularyItem`)
 
-| Trường | Mô tả |
-|---|---|
-| `english` | Từ tiếng Anh |
-| `phonetic` | Phiên âm IPA |
-| `vietnamese` | Nghĩa tiếng Việt |
-| `example_en` | Câu ví dụ tiếng Anh |
-| `example_vi` | Bản dịch câu ví dụ |
+Tên trường được đặt trung tính để dùng chung cho mọi ngôn ngữ:
 
-Kết quả phân tích ảnh (`ImageAnalysisResult`) gồm `full_narrative` (bài tường thuật tổng hợp bằng tiếng Việt để đọc toàn bộ) và mảng `items: VocabularyItem[]`.
+| Trường | Mô tả | Ví dụ (Trung) |
+|---|---|---|
+| `word` | Từ ở dạng chữ viết gốc | 书包 |
+| `reading` | Cách đọc mà người Việt đọc được | shūbāo |
+| `vietnamese` | Nghĩa tiếng Việt | cặp sách |
+| `example` | Câu ví dụ bằng ngôn ngữ đích | 我的书包很重。 |
+| `example_vi` | Bản dịch câu ví dụ | Cặp sách của tôi rất nặng. |
+
+Với tiếng Anh, `reading` là phiên âm IPA; tiếng Nhật là romaji + kana; tiếng Hàn là Revised Romanization; tiếng Trung là Pinyin có dấu thanh.
+
+Kết quả phân tích (`ImageAnalysisResult`) gồm `language`, `full_narrative` (bài tường thuật tiếng Việt), `items: VocabularyItem[]` và `quotaRemaining` (nếu Worker báo).
 
 ## Cấu trúc mã nguồn
 
 - `src/app/index.tsx` — màn hình duy nhất của app, chứa toàn bộ state machine.
 - `src/services/image.ts` — chọn ảnh + resize/nén ảnh.
-- `src/services/gemini.ts` — gọi Gemini API, validate kết quả bằng zod.
-- `src/services/speech.ts` — phát giọng nói.
+- `src/services/gemini.ts` — gọi Worker, timeout 45s, đọc mã lỗi, validate kết quả bằng zod.
+- `src/services/speech.ts` — phát giọng nói đa ngôn ngữ + kiểm tra giọng có sẵn.
+- `src/services/preferences.ts` — lưu `deviceId` (để đếm hạn mức) và ngôn ngữ đã chọn.
 - `src/services/logger.ts` — ghi/đọc/xóa log lỗi cục bộ.
-- `src/constants/analysisPrompt.ts` — prompt gửi cho Gemini + schema kỳ vọng.
+- `src/constants/languages.ts` — danh sách ngôn ngữ học được.
 - `src/types/vocabulary.ts` — kiểu dữ liệu dùng chung.
-- `src/components/` — các thành phần UI: `ImagePickerCard`, `ImagePreview`, `AnalysisLoading`, `VocabularyCard`, `ErrorState`, `PrimaryButton`.
+- `src/components/` — `ImagePickerCard`, `ImagePreview`, `LanguagePicker`, `AnalysisLoading`, `VocabularyCard`, `ErrorState`, `PrimaryButton`.
+- `worker/snapvocab-proxy.js` — mã nguồn Cloudflare Worker (xem phần triển khai bên dưới).
 
-## Giới hạn hiện tại (đã biết, chấp nhận ở giai đoạn MVP)
+## Cấu hình & triển khai
 
-- Biến `EXPO_PUBLIC_*` (bao gồm API key Gemini) bị đóng gói vào bản build và có thể trích xuất được từ production build. Đây là đánh đổi chấp nhận được cho giai đoạn MVP/prototype — khi phát hành chính thức cần có backend proxy để không lộ key ra thiết bị người dùng.
-- Không có backend, không lưu trữ dữ liệu người dùng trên server — mọi thứ chạy và lưu cục bộ trên máy.
+**App** — `.env`:
+
+```
+EXPO_PUBLIC_API_URL=https://<tên-worker>.<subdomain>.workers.dev
+```
+
+Khi build bằng EAS, biến này phải được khai trong `eas.json` (mục `build.<profile>.env`) hoặc EAS environment variables, vì `.env` bị gitignore.
+
+**Worker** — dán `worker/snapvocab-proxy.js` vào trình soạn thảo của Cloudflare dashboard rồi Deploy. Biến cần khai ở **Settings → Variables and Secrets**:
+
+| Tên | Loại | Giá trị |
+|---|---|---|
+| `GEMINI_API_KEY` | Secret | API key Google AI Studio |
+| `GEMINI_MODEL` | Text | ví dụ `gemini-3.6-flash` |
+| `DAILY_QUOTA` | Text | (tuỳ chọn) số lượt/ngày mỗi thiết bị, mặc định 50 |
+| `QUOTA` | KV binding | (tuỳ chọn) namespace để đếm hạn mức; chưa tạo thì Worker vẫn chạy, chỉ là không giới hạn |
+
+Kiểm tra nhanh sau khi deploy:
+
+```bash
+sips -Z 1280 anh.jpg --out /tmp/small.jpg
+base64 -i /tmp/small.jpg | tr -d '\n' > /tmp/test.b64
+curl -X POST "https://<worker>/analyze?lang=en" \
+  -H "content-type: text/plain" --data-binary @/tmp/test.b64
+```
+
+## Giới hạn hiện tại (đã biết)
+
+- **URL Worker nằm trong bundle app** và trích xuất được. Đây là đánh đổi không tránh khỏi: khác với API key, kẻ xấu chỉ dùng được đúng chức năng phân tích ảnh, bị chặn theo hạn mức, và bạn khoá được phía server mà người dùng thật không phải cập nhật app. Hạn mức theo thiết bị chỉ có tác dụng khi đã tạo KV binding `QUOTA`.
+- **Gemini trả 503 "high demand" khá thường xuyên** với các model flash. Worker đã tự thử lại 2 lần; nếu vẫn hỏng thì app báo "Hệ thống đang quá tải".
+- **Giọng đọc phụ thuộc thiết bị.** `expo-speech` không đảm bảo máy nào cũng có giọng Nhật/Hàn/Trung — nhiều máy Android phải tải thêm. App phát hiện và ẩn nút nghe, nhưng không tự cài hộ được.
+- **Chưa lưu lịch sử từ vựng.** Không có dữ liệu người dùng nào được lưu trên server.
+- Chất lượng nội dung các ngôn ngữ ngoài tiếng Anh chưa được kiểm chứng kỹ bằng người bản xứ.
 
 ## Bundle ID
 

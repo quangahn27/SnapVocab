@@ -7,9 +7,11 @@ import { AnalysisLoading } from '@/components/AnalysisLoading';
 import { ErrorState } from '@/components/ErrorState';
 import { ImagePickerCard } from '@/components/ImagePickerCard';
 import { ImagePreview } from '@/components/ImagePreview';
+import { LanguagePicker } from '@/components/LanguagePicker';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { VocabularyCard } from '@/components/VocabularyCard';
 import { SnapVocabColors } from '@/constants/colors';
+import { getTargetLanguage, type TargetLanguageCode } from '@/constants/languages';
 import { AnalysisError, analyzeImage } from '@/services/gemini';
 import {
   ImagePickError,
@@ -19,7 +21,8 @@ import {
   type PickedAsset,
 } from '@/services/image';
 import { logError } from '@/services/logger';
-import { speakAll, speakEnglish, stopSpeaking } from '@/services/speech';
+import { getPreferredLanguage, setPreferredLanguage } from '@/services/preferences';
+import { isLanguageSupported, speakAll, speakText, stopSpeaking } from '@/services/speech';
 import type { ImageAnalysisResult } from '@/types/vocabulary';
 
 const GENERIC_ERROR_MESSAGE = 'Không thể phân tích ảnh lúc này. Vui lòng thử lại.';
@@ -30,18 +33,50 @@ type SelectedImage = {
   base64: string;
 };
 
+type ScreenError = {
+  message: string;
+  retryAfterSeconds?: number;
+};
+
 export default function SnapVocabScreen() {
+  const [language, setLanguage] = useState<TargetLanguageCode>(() => getPreferredLanguage());
   const [selectedImage, setSelectedImage] = useState<SelectedImage | null>(null);
   const [result, setResult] = useState<ImageAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isPicking, setIsPicking] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ScreenError | null>(null);
+  const [speechAvailable, setSpeechAvailable] = useState(true);
+
+  const targetLanguage = getTargetLanguage(language);
+  // "Tiếng Nhật" -> "tiếng Nhật", so it reads naturally mid-sentence.
+  const languageName = targetLanguage.label.charAt(0).toLowerCase() + targetLanguage.label.slice(1);
 
   useEffect(() => {
     return () => {
       stopSpeaking();
     };
   }, []);
+
+  // A device may simply not have a voice for the target language installed,
+  // in which case the speaker buttons are hidden rather than playing silence.
+  useEffect(() => {
+    let active = true;
+    isLanguageSupported(targetLanguage.speechLanguage).then((supported) => {
+      if (active) setSpeechAvailable(supported);
+    });
+    return () => {
+      active = false;
+    };
+  }, [targetLanguage.speechLanguage]);
+
+  function handleChangeLanguage(code: TargetLanguageCode) {
+    if (code === language) return;
+    stopSpeaking();
+    setLanguage(code);
+    setPreferredLanguage(code);
+    setResult(null);
+    setError(null);
+  }
 
   async function handlePick(source: 'camera' | 'library') {
     if (isPicking || isAnalyzing) return;
@@ -60,10 +95,10 @@ export default function SnapVocabScreen() {
       setSelectedImage(null);
       setResult(null);
       if (err instanceof ImagePickError) {
-        setError(err.message);
+        setError({ message: err.message });
       } else {
         logError('screen.imagePick', err);
-        setError(GENERIC_ERROR_MESSAGE);
+        setError({ message: GENERIC_ERROR_MESSAGE });
       }
     } finally {
       setIsPicking(false);
@@ -75,14 +110,14 @@ export default function SnapVocabScreen() {
     setIsAnalyzing(true);
     setError(null);
     try {
-      const data = await analyzeImage(selectedImage.base64, 'image/jpeg');
+      const data = await analyzeImage(selectedImage.base64, language);
       setResult(data);
     } catch (err) {
       if (err instanceof AnalysisError) {
-        setError(err.message);
+        setError({ message: err.message, retryAfterSeconds: err.retryAfterSeconds });
       } else {
         logError('screen.analyze', err);
-        setError(GENERIC_ERROR_MESSAGE);
+        setError({ message: GENERIC_ERROR_MESSAGE });
       }
     } finally {
       setIsAnalyzing(false);
@@ -114,6 +149,8 @@ export default function SnapVocabScreen() {
           ? 'PREVIEW'
           : 'EMPTY';
 
+  const resultLanguage = result ? getTargetLanguage(result.language) : targetLanguage;
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.scrollOuter} keyboardShouldPersistTaps="handled">
@@ -137,7 +174,25 @@ export default function SnapVocabScreen() {
             <View style={styles.header}>
               <Text style={styles.appTitle}>SnapVocab</Text>
               {screenState === 'EMPTY' && (
-                <Text style={styles.appSubtitle}>Học tiếng Anh từ thế giới xung quanh bạn.</Text>
+                <Text style={styles.appSubtitle}>
+                  Học {languageName} từ thế giới xung quanh bạn.
+                </Text>
+              )}
+            </View>
+          )}
+
+          {(screenState === 'EMPTY' || screenState === 'PREVIEW') && (
+            <View style={styles.section}>
+              <LanguagePicker
+                value={language}
+                onChange={handleChangeLanguage}
+                disabled={isPicking || isAnalyzing}
+              />
+              {!speechAvailable && (
+                <Text style={styles.speechWarning}>
+                  ⚠️ Thiết bị chưa cài giọng đọc {languageName}. Bạn vẫn xem được từ vựng, nhưng nút
+                  nghe sẽ bị ẩn. Có thể cài thêm giọng trong phần Cài đặt của máy.
+                </Text>
               )}
             </View>
           )}
@@ -146,8 +201,8 @@ export default function SnapVocabScreen() {
             <View style={styles.section}>
               <Text style={styles.headline}>Bạn muốn học gì hôm nay?</Text>
               <Text style={styles.description}>
-                Chụp một bức ảnh hoặc chọn ảnh có sẵn. SnapVocab sẽ tìm những từ tiếng Anh hữu ích
-                trong ảnh.
+                Chụp một bức ảnh hoặc chọn ảnh có sẵn. SnapVocab sẽ tìm những từ {languageName} hữu
+                ích trong ảnh.
               </Text>
               <ImagePickerCard
                 onPickCamera={() => handlePick('camera')}
@@ -166,7 +221,7 @@ export default function SnapVocabScreen() {
               />
               <Text style={styles.headline}>Sẵn sàng khám phá?</Text>
               <Text style={styles.description}>
-                AI sẽ tìm tối đa 5 từ tiếng Anh hữu ích trong bức ảnh này.
+                AI sẽ tìm tối đa 5 từ {languageName} hữu ích trong bức ảnh này.
               </Text>
               {screenState === 'ANALYZING' ? (
                 <AnalysisLoading />
@@ -186,7 +241,12 @@ export default function SnapVocabScreen() {
 
           {screenState === 'RESULT' && result && (
             <View style={styles.section}>
-              <Text style={styles.foundCount}>{result.items.length} từ được tìm thấy</Text>
+              <Text style={styles.foundCount}>
+                {result.items.length} từ {languageName} được tìm thấy
+                {typeof result.quotaRemaining === 'number'
+                  ? ` · còn ${result.quotaRemaining} lượt hôm nay`
+                  : ''}
+              </Text>
 
               {selectedImage && (
                 <Image source={{ uri: selectedImage.uri }} style={styles.resultImage} contentFit="cover" />
@@ -198,19 +258,23 @@ export default function SnapVocabScreen() {
                   <Text style={styles.summaryTitle}>Nghe toàn bộ</Text>
                 </View>
                 <Text style={styles.summaryNarrative}>{result.full_narrative}</Text>
-                <PrimaryButton
-                  label="▶ Nghe"
-                  variant="secondary"
-                  onPress={() => speakAll(result.items)}
-                />
+                {speechAvailable && (
+                  <PrimaryButton
+                    label="▶ Nghe"
+                    variant="secondary"
+                    onPress={() => speakAll(result.items, resultLanguage.speechLanguage)}
+                  />
+                )}
               </View>
 
               {result.items.map((item, index) => (
                 <VocabularyCard
-                  key={`${item.english}-${index}`}
+                  key={`${item.word}-${index}`}
                   item={item}
-                  onSpeakWord={speakEnglish}
-                  onSpeakExample={speakEnglish}
+                  language={resultLanguage}
+                  speechAvailable={speechAvailable}
+                  onSpeakWord={(text) => speakText(text, resultLanguage.speechLanguage)}
+                  onSpeakExample={(text) => speakText(text, resultLanguage.speechLanguage)}
                 />
               ))}
 
@@ -220,7 +284,11 @@ export default function SnapVocabScreen() {
 
           {screenState === 'ERROR' && (
             <View style={styles.section}>
-              <ErrorState message={error ?? GENERIC_ERROR_MESSAGE} onRetry={handleRetry} />
+              <ErrorState
+                message={error?.message ?? GENERIC_ERROR_MESSAGE}
+                retryAfterSeconds={error?.retryAfterSeconds}
+                onRetry={handleRetry}
+              />
             </View>
           )}
         </View>
@@ -296,6 +364,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: SnapVocabColors.textSecondary,
     lineHeight: 22,
+  },
+  speechWarning: {
+    fontSize: 13,
+    color: SnapVocabColors.textSecondary,
+    lineHeight: 20,
   },
   foundCount: {
     fontSize: 15,

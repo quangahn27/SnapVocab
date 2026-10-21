@@ -1,7 +1,7 @@
 /**
- * Fixed light palette for the SnapVocab MVP screen.
- * This is intentionally separate from the app's system light/dark ThemeColor
- * (see `theme.ts`), since SnapVocab does not support dark mode yet.
+ * Fixed light palette for the SnapVocab screen.
+ * SnapVocab does not support dark mode, so there is deliberately no
+ * light/dark theme layer — these values are the whole palette.
  */
 export const SnapVocabColors = {
   background: '#F7F8FC',
