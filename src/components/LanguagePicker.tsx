@@ -9,6 +9,11 @@ type LanguagePickerProps = {
   disabled?: boolean;
 };
 
+/**
+ * Styled for the gradient header it lives in — white-on-gradient chips, and
+ * the selected one inverts to a solid white chip. It is never rendered on the
+ * light background, so there is no second colour scheme to carry.
+ */
 export function LanguagePicker({ value, onChange, disabled = false }: LanguagePickerProps) {
   return (
     <View style={styles.container}>
@@ -51,9 +56,10 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   label: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    color: SnapVocabColors.textSecondary,
+    letterSpacing: 0.3,
+    color: SnapVocabColors.onPrimaryMuted,
   },
   row: {
     flexDirection: 'row',
@@ -63,49 +69,48 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 7,
     minHeight: 44,
-    paddingHorizontal: 14,
+    paddingLeft: 6,
+    paddingRight: 14,
     borderRadius: 22,
-    borderWidth: 1,
-    borderColor: SnapVocabColors.border,
-    backgroundColor: SnapVocabColors.card,
+    backgroundColor: SnapVocabColors.onPrimarySoft,
   },
   chipSelected: {
-    backgroundColor: SnapVocabColors.primary,
-    borderColor: SnapVocabColors.primary,
+    backgroundColor: SnapVocabColors.card,
+    boxShadow: [{ offsetX: 0, offsetY: 4, blurRadius: 12, color: 'rgba(17, 24, 39, 0.18)' }],
   },
   chipPressed: {
-    backgroundColor: SnapVocabColors.background,
+    backgroundColor: 'rgba(255, 255, 255, 0.32)',
   },
   chipDisabled: {
     opacity: 0.5,
   },
   badge: {
-    width: 26,
-    height: 26,
-    borderRadius: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: SnapVocabColors.background,
-  },
-  badgeSelected: {
     backgroundColor: 'rgba(255, 255, 255, 0.22)',
   },
+  badgeSelected: {
+    backgroundColor: SnapVocabColors.primarySoft,
+  },
   badgeLabel: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
-    color: SnapVocabColors.primary,
+    color: SnapVocabColors.onPrimary,
   },
   badgeLabelSelected: {
-    color: '#FFFFFF',
+    color: SnapVocabColors.primary,
   },
   chipLabel: {
     fontSize: 15,
     fontWeight: '600',
-    color: SnapVocabColors.text,
+    color: SnapVocabColors.onPrimary,
   },
   chipLabelSelected: {
-    color: '#FFFFFF',
+    color: SnapVocabColors.primary,
   },
 });
