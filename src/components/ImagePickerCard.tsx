@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import { Icon } from '@/components/Icon';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { SnapVocabColors } from '@/constants/colors';
 
@@ -13,15 +14,27 @@ export function ImagePickerCard({ onPickCamera, onPickLibrary, disabled }: Image
   return (
     <View style={styles.container}>
       <View style={styles.placeholder}>
-        <Text style={styles.placeholderIcon}>🖼️</Text>
+        <Icon
+          name="add-photo-alternate"
+          size={44}
+          color={SnapVocabColors.textSecondary}
+          style={styles.placeholderIcon}
+        />
         <Text style={styles.placeholderTitle}>Thêm một bức ảnh</Text>
         <Text style={styles.placeholderSubtitle}>JPG, PNG hoặc ảnh từ camera</Text>
       </View>
 
       <View style={styles.actions}>
-        <PrimaryButton label="📷  Chụp ảnh" variant="primary" onPress={onPickCamera} disabled={disabled} />
         <PrimaryButton
-          label="🖼  Chọn từ thư viện"
+          label="Chụp ảnh"
+          icon="photo-camera"
+          variant="primary"
+          onPress={onPickCamera}
+          disabled={disabled}
+        />
+        <PrimaryButton
+          label="Chọn từ thư viện"
+          icon="photo-library"
           variant="secondary"
           onPress={onPickLibrary}
           disabled={disabled}
@@ -49,7 +62,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   placeholderIcon: {
-    fontSize: 40,
     marginBottom: 4,
   },
   placeholderTitle: {

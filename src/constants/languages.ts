@@ -8,7 +8,13 @@ export type TargetLanguage = {
   code: TargetLanguageCode;
   /** Vietnamese label shown in the picker. */
   label: string;
-  flag: string;
+  /**
+   * One or two characters of the language's own writing system, shown as the
+   * badge in the picker. It replaces a flag emoji: flags render differently on
+   * every device, no icon font carries them, and a country is not a language —
+   * whereas the script is exactly what the learner is about to read.
+   */
+  script: string;
   /** BCP-47 tag passed to expo-speech for this language. */
   speechLanguage: string;
   /**
@@ -20,10 +26,10 @@ export type TargetLanguage = {
 };
 
 export const TARGET_LANGUAGES: readonly TargetLanguage[] = [
-  { code: 'en', label: 'Tiếng Anh', flag: '🇬🇧', speechLanguage: 'en-US', latinScript: true },
-  { code: 'ja', label: 'Tiếng Nhật', flag: '🇯🇵', speechLanguage: 'ja-JP', latinScript: false },
-  { code: 'ko', label: 'Tiếng Hàn', flag: '🇰🇷', speechLanguage: 'ko-KR', latinScript: false },
-  { code: 'zh', label: 'Tiếng Trung', flag: '🇨🇳', speechLanguage: 'zh-CN', latinScript: false },
+  { code: 'en', label: 'Tiếng Anh', script: 'Aa', speechLanguage: 'en-US', latinScript: true },
+  { code: 'ja', label: 'Tiếng Nhật', script: 'あ', speechLanguage: 'ja-JP', latinScript: false },
+  { code: 'ko', label: 'Tiếng Hàn', script: '가', speechLanguage: 'ko-KR', latinScript: false },
+  { code: 'zh', label: 'Tiếng Trung', script: '中', speechLanguage: 'zh-CN', latinScript: false },
 ];
 
 export const DEFAULT_TARGET_LANGUAGE: TargetLanguageCode = 'en';

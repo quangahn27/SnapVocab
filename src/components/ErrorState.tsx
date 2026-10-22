@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { Icon } from '@/components/Icon';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { SnapVocabColors } from '@/constants/colors';
 
@@ -39,7 +40,7 @@ export function ErrorState({ message, onRetry, retryAfterSeconds }: ErrorStatePr
 
   return (
     <View style={styles.card}>
-      <Text style={styles.icon}>⚠️</Text>
+      <Icon name="error-outline" size={36} color={SnapVocabColors.error} />
       <Text style={styles.message}>{message}</Text>
       {waiting && <Text style={styles.hint}>Có thể thử lại sau {formatCountdown(remaining)}.</Text>}
       <PrimaryButton
@@ -61,9 +62,6 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
     gap: 16,
-  },
-  icon: {
-    fontSize: 32,
   },
   message: {
     fontSize: 15,

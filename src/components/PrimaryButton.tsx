@@ -1,12 +1,22 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Icon, type IconName } from '@/components/Icon';
 import { SnapVocabColors } from '@/constants/colors';
 
 type Variant = 'primary' | 'secondary' | 'text';
 
+/** Label, icon and spinner always share one colour per variant. */
+const CONTENT_COLOR: Record<Variant, string> = {
+  primary: '#FFFFFF',
+  secondary: SnapVocabColors.text,
+  text: SnapVocabColors.primary,
+};
+
 type PrimaryButtonProps = {
   label: string;
   onPress: () => void;
+  /** Leading icon; omitted for buttons whose label already stands alone. */
+  icon?: IconName;
   variant?: Variant;
   disabled?: boolean;
   loading?: boolean;
@@ -16,12 +26,14 @@ type PrimaryButtonProps = {
 export function PrimaryButton({
   label,
   onPress,
+  icon,
   variant = 'primary',
   disabled = false,
   loading = false,
   accessibilityLabel,
 }: PrimaryButtonProps) {
   const isDisabled = disabled || loading;
+  const contentColor = CONTENT_COLOR[variant];
 
   return (
     <Pressable
@@ -40,21 +52,12 @@ export function PrimaryButton({
         isDisabled && styles.disabled,
       ]}>
       <View style={styles.content}>
-        {loading && (
-          <ActivityIndicator
-            size="small"
-            color={variant === 'primary' ? '#FFFFFF' : SnapVocabColors.primary}
-          />
+        {loading ? (
+          <ActivityIndicator size="small" color={contentColor} />
+        ) : (
+          icon && <Icon name={icon} size={20} color={contentColor} />
         )}
-        <Text
-          style={[
-            styles.label,
-            variant === 'primary' && styles.labelPrimary,
-            variant === 'secondary' && styles.labelSecondary,
-            variant === 'text' && styles.labelText,
-          ]}>
-          {label}
-        </Text>
+        <Text style={[styles.label, { color: contentColor }]}>{label}</Text>
       </View>
     </Pressable>
   );
@@ -98,14 +101,5 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-  },
-  labelPrimary: {
-    color: '#FFFFFF',
-  },
-  labelSecondary: {
-    color: SnapVocabColors.text,
-  },
-  labelText: {
-    color: SnapVocabColors.primary,
   },
 });

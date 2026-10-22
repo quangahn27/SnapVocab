@@ -30,7 +30,11 @@ export function LanguagePicker({ value, onChange, disabled = false }: LanguagePi
                 pressed && !disabled && !selected && styles.chipPressed,
                 disabled && styles.chipDisabled,
               ]}>
-              <Text style={styles.flag}>{language.flag}</Text>
+              <View style={[styles.badge, selected && styles.badgeSelected]}>
+                <Text style={[styles.badgeLabel, selected && styles.badgeLabelSelected]}>
+                  {language.script}
+                </Text>
+              </View>
               <Text style={[styles.chipLabel, selected && styles.chipLabelSelected]}>
                 {language.label}
               </Text>
@@ -77,8 +81,24 @@ const styles = StyleSheet.create({
   chipDisabled: {
     opacity: 0.5,
   },
-  flag: {
-    fontSize: 16,
+  badge: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: SnapVocabColors.background,
+  },
+  badgeSelected: {
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+  },
+  badgeLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: SnapVocabColors.primary,
+  },
+  badgeLabelSelected: {
+    color: '#FFFFFF',
   },
   chipLabel: {
     fontSize: 15,

@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Icon } from '@/components/Icon';
 import { SnapVocabColors } from '@/constants/colors';
 import type { TargetLanguage } from '@/constants/languages';
 import type { VocabularyItem } from '@/types/vocabulary';
@@ -21,7 +22,7 @@ function SpeakerButton({ onPress, accessibilityLabel }: { onPress: () => void; a
       accessibilityLabel={accessibilityLabel}
       hitSlop={8}
       style={({ pressed }) => [styles.speakerButton, pressed && styles.speakerButtonPressed]}>
-      <Text style={styles.speakerIcon}>🔊</Text>
+      <Icon name="volume-up" size={22} color={SnapVocabColors.primary} />
     </Pressable>
   );
 }
@@ -144,8 +145,5 @@ const styles = StyleSheet.create({
   },
   speakerButtonPressed: {
     backgroundColor: SnapVocabColors.background,
-  },
-  speakerIcon: {
-    fontSize: 20,
   },
 });

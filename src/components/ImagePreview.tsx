@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Icon } from '@/components/Icon';
 import { SnapVocabColors } from '@/constants/colors';
 
 type ImagePreviewProps = {
@@ -19,6 +20,7 @@ export function ImagePreview({ uri, onChangeImage, disabled }: ImagePreviewProps
         accessibilityRole="button"
         accessibilityLabel="Đổi ảnh"
         style={({ pressed }) => [styles.changeButton, pressed && !disabled && styles.changeButtonPressed]}>
+        <Icon name="swap-horiz" size={18} color="#FFFFFF" />
         <Text style={styles.changeButtonLabel}>Đổi ảnh</Text>
       </Pressable>
     </View>
@@ -43,6 +45,9 @@ const styles = StyleSheet.create({
     right: 12,
     minHeight: 36,
     paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     justifyContent: 'center',
     borderRadius: 12,
     backgroundColor: 'rgba(17, 24, 39, 0.6)',

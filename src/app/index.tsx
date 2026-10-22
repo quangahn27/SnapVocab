@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AnalysisLoading } from '@/components/AnalysisLoading';
 import { ErrorState } from '@/components/ErrorState';
+import { Icon } from '@/components/Icon';
 import { ImagePickerCard } from '@/components/ImagePickerCard';
 import { ImagePreview } from '@/components/ImagePreview';
 import { LanguagePicker } from '@/components/LanguagePicker';
@@ -163,7 +164,7 @@ export default function SnapVocabScreen() {
                 accessibilityLabel="Quay lại"
                 hitSlop={8}
                 style={styles.backButton}>
-                <Text style={styles.backArrow}>←</Text>
+                <Icon name="arrow-back" size={24} color={SnapVocabColors.text} />
               </Pressable>
               <View style={styles.resultHeaderTextColumn}>
                 <Text style={styles.resultLabel}>KẾT QUẢ</Text>
@@ -189,10 +190,18 @@ export default function SnapVocabScreen() {
                 disabled={isPicking || isAnalyzing}
               />
               {!speechAvailable && (
-                <Text style={styles.speechWarning}>
-                  ⚠️ Thiết bị chưa cài giọng đọc {languageName}. Bạn vẫn xem được từ vựng, nhưng nút
-                  nghe sẽ bị ẩn. Có thể cài thêm giọng trong phần Cài đặt của máy.
-                </Text>
+                <View style={styles.speechWarningRow}>
+                  <Icon
+                    name="warning-amber"
+                    size={16}
+                    color={SnapVocabColors.textSecondary}
+                    style={styles.speechWarningIcon}
+                  />
+                  <Text style={styles.speechWarning}>
+                    Thiết bị chưa cài giọng đọc {languageName}. Bạn vẫn xem được từ vựng, nhưng nút
+                    nghe sẽ bị ẩn. Có thể cài thêm giọng trong phần Cài đặt của máy.
+                  </Text>
+                </View>
               )}
             </View>
           )}
@@ -227,7 +236,12 @@ export default function SnapVocabScreen() {
                 <AnalysisLoading />
               ) : (
                 <>
-                  <PrimaryButton label="✨ Phân tích ảnh" onPress={handleAnalyze} disabled={isPicking} />
+                  <PrimaryButton
+                    label="Phân tích ảnh"
+                    icon="auto-awesome"
+                    onPress={handleAnalyze}
+                    disabled={isPicking}
+                  />
                   <PrimaryButton
                     label="Chọn ảnh khác"
                     variant="text"
@@ -254,13 +268,14 @@ export default function SnapVocabScreen() {
 
               <View style={styles.summaryCard}>
                 <View style={styles.summaryHeaderRow}>
-                  <Text style={styles.summaryIcon}>🔊</Text>
+                  <Icon name="volume-up" size={20} color={SnapVocabColors.primary} />
                   <Text style={styles.summaryTitle}>Nghe toàn bộ</Text>
                 </View>
                 <Text style={styles.summaryNarrative}>{result.full_narrative}</Text>
                 {speechAvailable && (
                   <PrimaryButton
-                    label="▶ Nghe"
+                    label="Nghe"
+                    icon="play-arrow"
                     variant="secondary"
                     onPress={() => speakAll(result.items, resultLanguage.speechLanguage)}
                   />
@@ -339,10 +354,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: -12,
   },
-  backArrow: {
-    fontSize: 22,
-    color: SnapVocabColors.text,
-  },
   resultHeaderTextColumn: {
     gap: 2,
   },
@@ -365,7 +376,16 @@ const styles = StyleSheet.create({
     color: SnapVocabColors.textSecondary,
     lineHeight: 22,
   },
+  speechWarningRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  speechWarningIcon: {
+    // Nudged down to sit on the first line of the 20px-line-height text.
+    marginTop: 2,
+  },
   speechWarning: {
+    flex: 1,
     fontSize: 13,
     color: SnapVocabColors.textSecondary,
     lineHeight: 20,
@@ -391,9 +411,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  summaryIcon: {
-    fontSize: 18,
   },
   summaryTitle: {
     fontSize: 16,
