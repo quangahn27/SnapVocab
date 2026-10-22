@@ -24,14 +24,18 @@
  */
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
+const GROQ_API_BASE = 'https://api.groq.com/openai/v1/chat/completions';
 const MAX_BODY_BYTES = 1_500_000;
 const MAX_ITEMS = 5;
 const DEFAULT_DAILY_QUOTA = 50;
 
-// Gemini returns 503 "high demand" fairly often for flash models; one quick
-// retry usually succeeds and saves the user from seeing an error screen.
-const RETRY_STATUSES = [500, 502, 503, 504];
-const MAX_RETRIES = 2;
+const DEFAULT_GROQ_MODEL = 'qwen/qwen3.8-27b';
+const DEFAULT_PROVIDER_ORDER = 'gemini,groq';
+const DEFAULT_GROQ_LANGS = 'en,zh';
+
+// Flash models return 503 "high demand" often enough that a lone provider is
+// worth retrying; with a fallback configured we switch providers instead.
+const SAME_PROVIDER_ATTEMPTS = 3;
 const RETRY_DELAY_MS = 1000;
 
 const LANGUAGES = {
@@ -142,6 +146,18 @@ const ANALYSIS_RESPONSE_SCHEMA = {
   required: ['full_narrative', 'items'],
 };
 
+/**
+ * Groq has no server-side schema enforcement we can use: its `json_schema`
+ * strict mode corrupts non-ASCII output — IPA and Pinyin come back as NUL and
+ * other control bytes, which is exactly the `reading` field this app needs.
+ * So Groq runs in plain `json_object` mode and the shape is described in the
+ * prompt instead, with zod in the app as the real guarantee.
+ */
+const JSON_SHAPE_HINT = `
+
+Return ONLY a JSON object shaped exactly like this, with no other text:
+{"full_narrative": string, "items": [{"word": string, "reading": string, "vietnamese": string, "example": string, "example_vi": string}]}`;
+
 function fail(status, code, message, extra = {}) {
   return json({ error: { code, message, ...extra } }, status);
 }
@@ -194,55 +210,203 @@ async function consumeQuota(env, deviceId) {
   return { allowed: true, remaining: limit - used - 1 };
 }
 
-/** Reads Gemini's suggested retry delay ("retryDelay": "27s") out of an error body. */
-function retryAfterFromGemini(body) {
-  const match = /"retryDelay"\s*:\s*"(\d+)s"/.exec(body);
-  return match ? Number(match[1]) : null;
-}
-
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Calls Gemini, retrying the transient overload statuses a couple of times. */
-async function callGemini(env, prompt, base64) {
-  const body = JSON.stringify({
-    contents: [
-      {
-        parts: [
-          { text: prompt },
-          { inline_data: { mime_type: 'image/jpeg', data: base64 } },
+/** Reads a provider's suggested wait out of an error body, in seconds. */
+function retryAfterFrom(body) {
+  const gemini = /"retryDelay"\s*:\s*"(\d+)s"/.exec(body);
+  if (gemini) return Number(gemini[1]);
+  const groq = /try again in ([\d.]+)s/i.exec(body);
+  if (groq) return Math.ceil(Number(groq[1]));
+  return null;
+}
+
+/** Open models sometimes wrap JSON in a Markdown fence despite json_object. */
+function stripFence(text) {
+  const fenced = /^\s*```(?:json)?\s*([\s\S]*?)\s*```\s*$/.exec(text);
+  return fenced ? fenced[1] : text;
+}
+
+function failure(status, body, { transient }) {
+  return { ok: false, status, transient, retryAfter: retryAfterFrom(body) };
+}
+
+// ---------------------------------------------------------------------------
+// Providers
+//
+// Each returns { ok: true, data } or { ok: false, status, transient, retryAfter }.
+// `transient` means "this provider is temporarily unavailable" (overload, rate
+// limit, network) and is the only case worth handing to another provider — a
+// 400 or a bad model name would fail identically everywhere, and retrying it
+// only hides the misconfiguration.
+// ---------------------------------------------------------------------------
+
+async function runGemini(env, lang, base64) {
+  let res;
+  try {
+    res = await fetch(`${GEMINI_API_BASE}/models/${env.GEMINI_MODEL}:generateContent`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-goog-api-key': env.GEMINI_API_KEY,
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: buildPrompt(lang) },
+              { inline_data: { mime_type: 'image/jpeg', data: base64 } },
+            ],
+          },
         ],
-      },
-    ],
-    generationConfig: {
-      responseMimeType: 'application/json',
-      responseSchema: ANALYSIS_RESPONSE_SCHEMA,
-    },
-  });
-
-  let lastResponse = null;
-
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
-    if (attempt > 0) await sleep(RETRY_DELAY_MS);
-
-    const response = await fetch(
-      `${GEMINI_API_BASE}/models/${env.GEMINI_MODEL}:generateContent`,
-      {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'x-goog-api-key': env.GEMINI_API_KEY,
+        generationConfig: {
+          responseMimeType: 'application/json',
+          responseSchema: ANALYSIS_RESPONSE_SCHEMA,
         },
-        body,
-      },
-    );
-
-    if (response.ok || !RETRY_STATUSES.includes(response.status)) return response;
-
-    console.log('gemini.retry', response.status, `attempt ${attempt + 1}`);
-    lastResponse = response;
+      }),
+    });
+  } catch (err) {
+    console.log('gemini.network', String(err));
+    return { ok: false, status: 0, transient: true, retryAfter: null };
   }
 
-  return lastResponse;
+  if (!res.ok) {
+    const body = await res.text();
+    console.log('gemini.http', res.status, body.slice(0, 600));
+    return failure(res.status, body, { transient: res.status === 429 || res.status >= 500 });
+  }
+
+  const payload = await res.json();
+  const text = payload?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) {
+    console.log('gemini.missingText', JSON.stringify(payload).slice(0, 500));
+    return { ok: false, status: 502, transient: false, retryAfter: null };
+  }
+
+  try {
+    return { ok: true, data: JSON.parse(text) };
+  } catch (err) {
+    console.log('gemini.parseText', String(err));
+    return { ok: false, status: 502, transient: false, retryAfter: null };
+  }
+}
+
+async function runGroq(env, lang, base64) {
+  let res;
+  try {
+    res = await fetch(GROQ_API_BASE, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${env.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: env.GROQ_MODEL || DEFAULT_GROQ_MODEL,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: buildPrompt(lang) + JSON_SHAPE_HINT },
+              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64}` } },
+            ],
+          },
+        ],
+        response_format: { type: 'json_object' },
+      }),
+    });
+  } catch (err) {
+    console.log('groq.network', String(err));
+    return { ok: false, status: 0, transient: true, retryAfter: null };
+  }
+
+  if (!res.ok) {
+    const body = await res.text();
+    console.log('groq.http', res.status, body.slice(0, 600));
+    return failure(res.status, body, { transient: res.status === 429 || res.status >= 500 });
+  }
+
+  const payload = await res.json();
+  const text = payload?.choices?.[0]?.message?.content;
+  if (!text) {
+    console.log('groq.missingText', JSON.stringify(payload).slice(0, 500));
+    return { ok: false, status: 502, transient: false, retryAfter: null };
+  }
+
+  try {
+    return { ok: true, data: JSON.parse(stripFence(text)) };
+  } catch (err) {
+    console.log('groq.parseText', String(err));
+    return { ok: false, status: 502, transient: false, retryAfter: null };
+  }
+}
+
+const PROVIDERS = { gemini: runGemini, groq: runGroq };
+
+/**
+ * Languages Groq is allowed to answer for.
+ *
+ * Measured on qwen3.8-27b: English IPA and Chinese Pinyin come out correct,
+ * but Japanese readings do not (飛行機 came back as "fūkōki" instead of
+ * "hikōki"). A beginner cannot tell a wrong reading from a right one, so for
+ * the languages where it cannot be trusted the app shows "overloaded" rather
+ * than teaching the wrong pronunciation.
+ */
+function groqLanguages(env) {
+  return (env.GROQ_FALLBACK_LANGS ?? DEFAULT_GROQ_LANGS)
+    .split(',')
+    .map((code) => code.trim())
+    .filter(Boolean);
+}
+
+function providerOrder(env) {
+  return (env.PROVIDER_ORDER ?? DEFAULT_PROVIDER_ORDER)
+    .split(',')
+    .map((name) => name.trim())
+    .filter((name) => PROVIDERS[name]);
+}
+
+function isEligible(name, env, lang) {
+  if (name === 'gemini') return Boolean(env.GEMINI_API_KEY && env.GEMINI_MODEL);
+  if (name === 'groq') return Boolean(env.GROQ_API_KEY) && groqLanguages(env).includes(lang);
+  return false;
+}
+
+/**
+ * Runs the eligible providers until one answers.
+ *
+ * With a usable fallback each provider gets a single attempt — handing a
+ * stalled request to another provider beats waiting out a retry on this one.
+ * When only one provider can serve this language (Japanese and Korean, where
+ * Groq is not trusted) there is nothing to fall back to, so it is retried.
+ *
+ * Returns null when nothing is configured for this language.
+ */
+async function analyze(env, lang, base64) {
+  const providers = providerOrder(env).filter((name) => isEligible(name, env, lang));
+  if (providers.length === 0) return null;
+
+  const attempts =
+    providers.length > 1 ? providers : Array(SAME_PROVIDER_ATTEMPTS).fill(providers[0]);
+
+  let last = null;
+  for (let i = 0; i < attempts.length; i += 1) {
+    const name = attempts[i];
+    if (i > 0 && attempts[i - 1] === name) await sleep(RETRY_DELAY_MS);
+
+    const result = await PROVIDERS[name](env, lang, base64);
+    last = { ...result, provider: name };
+
+    if (result.ok) return last;
+    // A non-transient failure (bad request, bad model, unparseable answer)
+    // would fail the same way everywhere, so stop rather than hide it.
+    if (!result.transient) return last;
+
+    if (i < attempts.length - 1) {
+      console.log('provider.next', name, '->', attempts[i + 1], result.status);
+    }
+  }
+
+  return last;
 }
 
 export default {
@@ -277,52 +441,29 @@ export default {
       });
     }
 
-    let res;
-    try {
-      res = await callGemini(env, buildPrompt(lang), base64);
-    } catch (err) {
-      console.log('gemini.network', String(err));
-      return fail(502, 'NETWORK', 'Vui lòng kiểm tra kết nối mạng và thử lại.');
+    const result = await analyze(env, lang, base64);
+
+    if (result === null) {
+      console.log('config.noProvider', lang);
+      return fail(500, 'API', 'Không thể phân tích ảnh lúc này.');
     }
 
-    if (res.status === 429) {
-      // Gemini's 429 body names which quota was hit and how long to wait; without
-      // logging it a rate limit is indistinguishable from any other throttling.
-      const detail = await res.text();
-      console.log('gemini.rateLimit', detail.slice(0, 600));
+    if (result.ok) {
+      const headers = { 'x-provider': result.provider };
+      if (quota.remaining !== null) headers['x-quota-remaining'] = String(quota.remaining);
+      return json(result.data, 200, headers);
+    }
+
+    if (result.status === 429) {
       return fail(429, 'RATE_LIMIT', 'SnapVocab đang có quá nhiều yêu cầu. Vui lòng thử lại sau ít phút.', {
-        retry_after: retryAfterFromGemini(detail) ?? 60,
+        retry_after: result.retryAfter ?? 60,
       });
     }
-    if (RETRY_STATUSES.includes(res.status)) {
-      console.log('gemini.overloaded', res.status);
+    if (result.transient) {
       return fail(503, 'OVERLOADED', 'Hệ thống đang quá tải. Vui lòng thử lại sau vài giây.', {
-        retry_after: 10,
+        retry_after: result.retryAfter ?? 10,
       });
     }
-    if (!res.ok) {
-      console.log('gemini.http', res.status, await res.text());
-      return fail(502, 'API', 'Không thể phân tích ảnh lúc này.');
-    }
-
-    const payload = await res.json();
-    const text = payload?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
-      console.log('gemini.missingText', JSON.stringify(payload).slice(0, 500));
-      return fail(502, 'PARSE', 'Không thể phân tích ảnh lúc này.');
-    }
-
-    let parsed;
-    try {
-      parsed = JSON.parse(text);
-    } catch (err) {
-      console.log('gemini.parseText', String(err));
-      return fail(502, 'PARSE', 'Không thể phân tích ảnh lúc này.');
-    }
-
-    const headers = {};
-    if (quota.remaining !== null) headers['x-quota-remaining'] = String(quota.remaining);
-
-    return json(parsed, 200, headers);
+    return fail(502, 'API', 'Không thể phân tích ảnh lúc này.');
   },
 };

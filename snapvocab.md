@@ -11,13 +11,24 @@ Không cần gõ, không cần tra từ điển — chỉ cần chụp ảnh v�
 ## Kiến trúc
 
 ```
-App (Expo)  ──ảnh base64 + ngôn ngữ đích──►  Cloudflare Worker  ──►  Gemini API
-            ◄──── { full_narrative, items } ────┘  (giữ API key, model, prompt)
+                                         ┌──► Gemini  (chính)
+App (Expo) ──ảnh base64 + ngôn ngữ──► Worker ─┤
+           ◄──── { full_narrative, items } ───┴──► Groq    (dự phòng, chỉ en/zh)
 ```
 
-App **không chứa API key**. Toàn bộ key Gemini, tên model và prompt nằm trong Cloudflare Worker (`worker/snapvocab-proxy.js`); app chỉ biết URL của Worker qua biến `EXPO_PUBLIC_API_URL`.
+App **không chứa API key**. Toàn bộ key, tên model và prompt nằm trong Cloudflare Worker (`worker/snapvocab-proxy.js`); app chỉ biết URL của Worker qua biến `EXPO_PUBLIC_API_URL`.
 
-Hệ quả thực tế: đổi prompt, đổi model, thêm ngôn ngữ mới chỉ cần deploy lại Worker — **không phải phát hành bản app mới**.
+App cũng **không biết nhà cung cấp AI nào đã trả lời** — Worker luôn trả về cùng một định dạng. Hệ quả thực tế: đổi prompt, đổi model, đổi cả nhà cung cấp, thêm ngôn ngữ mới đều chỉ cần deploy lại Worker, **không phải phát hành bản app mới**.
+
+### Dự phòng nhà cung cấp
+
+Gemini hay trả 503 "quá tải" vào giờ cao điểm. Khi đó Worker tự chuyển sang Groq thay vì báo lỗi cho người dùng.
+
+- Chỉ chuyển khi lỗi **tạm thời** (429, 5xx, lỗi mạng). Lỗi 400 hay sai tên model thì dừng luôn — chuyển nhà cung cấp cũng hỏng y hệt, mà còn che mất lỗi cấu hình thật.
+- Groq chỉ được phép trả lời **tiếng Anh và tiếng Trung** (`GROQ_FALLBACK_LANGS`). Đo thực tế trên `qwen3.8-27b`: IPA tiếng Anh và Pinyin tiếng Trung đều đúng, nhưng tiếng Nhật sai — 飛行機 ra `fūkōki` thay vì `hikōki`. Người mới học không thể tự phát hiện cách đọc sai, nên với ngôn ngữ chưa tin được thì thà báo "quá tải" còn hơn dạy sai.
+- Ngôn ngữ nào chỉ có một nhà cung cấp phục vụ (Nhật, Hàn) thì Worker thử lại chính nhà cung cấp đó 3 lần thay vì chuyển.
+- Groq chạy ở chế độ `json_object`, **tuyệt đối không dùng `json_schema` + `strict`** — chế độ strict của Groq làm hỏng ký tự ngoài ASCII, trả IPA và Pinyin về thành ký tự điều khiển `\x00`.
+- Response có header `x-provider: gemini|groq` để tra khi xem log.
 
 ## Luồng sử dụng (state machine)
 
@@ -98,6 +109,10 @@ Khi build bằng EAS, biến này phải được khai trong `eas.json` (mục `
 |---|---|---|
 | `GEMINI_API_KEY` | Secret | API key Google AI Studio |
 | `GEMINI_MODEL` | Text | ví dụ `gemini-3.6-flash` |
+| `GROQ_API_KEY` | Secret | (tuỳ chọn) API key Groq — không có thì chỉ chạy Gemini |
+| `GROQ_MODEL` | Text | (tuỳ chọn) mặc định `qwen/qwen3.8-27b` — model Groq duy nhất nhận ảnh |
+| `GROQ_FALLBACK_LANGS` | Text | (tuỳ chọn) mặc định `en,zh` |
+| `PROVIDER_ORDER` | Text | (tuỳ chọn) mặc định `gemini,groq`; đảo thành `groq,gemini` nếu ưu tiên tốc độ |
 | `DAILY_QUOTA` | Text | (tuỳ chọn) số lượt/ngày mỗi thiết bị, mặc định 50 |
 | `QUOTA` | KV binding | (tuỳ chọn) namespace để đếm hạn mức; chưa tạo thì Worker vẫn chạy, chỉ là không giới hạn |
 
@@ -113,7 +128,9 @@ curl -X POST "https://<worker>/analyze?lang=en" \
 ## Giới hạn hiện tại (đã biết)
 
 - **URL Worker nằm trong bundle app** và trích xuất được. Đây là đánh đổi không tránh khỏi: khác với API key, kẻ xấu chỉ dùng được đúng chức năng phân tích ảnh, bị chặn theo hạn mức, và bạn khoá được phía server mà người dùng thật không phải cập nhật app. Hạn mức theo thiết bị chỉ có tác dụng khi đã tạo KV binding `QUOTA`.
-- **Gemini trả 503 "high demand" khá thường xuyên** với các model flash. Worker đã tự thử lại 2 lần; nếu vẫn hỏng thì app báo "Hệ thống đang quá tải".
+- **Gemini trả 503 "high demand" khá thường xuyên** với các model flash. Worker chuyển sang Groq (tiếng Anh/Trung) hoặc thử lại 3 lần (tiếng Nhật/Hàn); vẫn hỏng thì app báo "Hệ thống đang quá tải".
+- **Gói free của Groq cũng chật**: 8.000 token/phút và 1.000 request/ngày. Một ảnh 1280px tốn ~2.200–2.600 token, tức khoảng **3 lượt/phút**. Groq là lưới đỡ lúc Gemini sập, không phải nguồn thay thế vô hạn.
+- **Chất lượng Groq thấp hơn Gemini**: bám prompt kém hơn, thỉnh thoảng bịa vật thể không có trong ảnh. Đổi lại nhanh gấp 4–5 lần (2,5–5s so với 3–13s).
 - **Giọng đọc phụ thuộc thiết bị.** `expo-speech` không đảm bảo máy nào cũng có giọng Nhật/Hàn/Trung — nhiều máy Android phải tải thêm. App phát hiện và ẩn nút nghe, nhưng không tự cài hộ được.
 - **Chưa lưu lịch sử từ vựng.** Không có dữ liệu người dùng nào được lưu trên server.
 - Chất lượng nội dung các ngôn ngữ ngoài tiếng Anh chưa được kiểm chứng kỹ bằng người bản xứ.
