@@ -19,7 +19,10 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.quangahn.x27.SnapVocab"
+      "package": "com.quangahn.x27.SnapVocab",
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "output": "static",
@@ -27,6 +30,8 @@
     },
     "plugins": [
       "expo-router",
+      "./plugins/with-scene-lifecycle",
+      "./plugins/with-release-signing",
       [
         "expo-splash-screen",
         {

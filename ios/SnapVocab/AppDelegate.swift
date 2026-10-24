@@ -20,7 +20,7 @@ class AppDelegate: ExpoAppDelegate, ExpoReactNativeFactoryProvider {
     reactNativeDelegate = delegate
     reactNativeFactory = factory
 
-    // The window is created and React Native is started by `SceneDelegate`
+// The window is created and React Native is started by `SceneDelegate`
     // (see Info.plist's `UIApplicationSceneManifest`), not here, since iOS 27
     // requires the scene-based life cycle.
 

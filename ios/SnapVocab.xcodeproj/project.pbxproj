@@ -8,32 +8,32 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		238B0CC1564E619825E57F7B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 51BBA624A2B29F4DCB764818 /* PrivacyInfo.xcprivacy */; };
+		251C6366A9AC8DA5E710E5F2 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 551B62083EEBE5C828B10B21 /* ExpoModulesProvider.swift */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		496FF892698C9DA0D5D1E789 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C49D7E8FA634654594A1C391 /* PrivacyInfo.xcprivacy */; };
-		4AF3CE1FF10B613AD0A2C66E /* libPods-SnapVocab.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FF258DE1F172221161921108 /* libPods-SnapVocab.a */; };
-		77289B044B0D479F8ED2766E /* expo.icon in Resources */ = {isa = PBXBuildFile; fileRef = 5570419562B74AF5A079B16D /* expo.icon */; };
-		9217EEE21D5970052970C98A /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FB60E2AF35953B535C4469B /* ExpoModulesProvider.swift */; };
+		5A72320B08F54C4BBA8A7059 /* expo.icon in Resources */ = {isa = PBXBuildFile; fileRef = 564E1D421F0D4F0CBD5B4843 /* expo.icon */; };
+		792638D1D0A6151E29CEF76F /* libPods-SnapVocab.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A089BE440AACE3000CDDD5AE /* libPods-SnapVocab.a */; };
+		A29D38F864294C36AEF87BAF /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD8FA99CA2334A75BAFA60C7 /* SceneDelegate.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		FF7D62B59096A5DE64EAE742 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1D733D6A318D9BED34A515 /* SceneDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0FB60E2AF35953B535C4469B /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-SnapVocab/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		12CBDA1CBAD8B1A75B4986F3 /* Pods-SnapVocab.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SnapVocab.release.xcconfig"; path = "Target Support Files/Pods-SnapVocab/Pods-SnapVocab.release.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* SnapVocab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SnapVocab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = SnapVocab/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = SnapVocab/Info.plist; sourceTree = "<group>"; };
-		5570419562B74AF5A079B16D /* expo.icon */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = expo.icon; path = SnapVocab/expo.icon; sourceTree = "<group>"; };
-		A276CF1460FBE59781474A92 /* Pods-SnapVocab.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SnapVocab.debug.xcconfig"; path = "Target Support Files/Pods-SnapVocab/Pods-SnapVocab.debug.xcconfig"; sourceTree = "<group>"; };
+		51BBA624A2B29F4DCB764818 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = SnapVocab/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		551B62083EEBE5C828B10B21 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-SnapVocab/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		564E1D421F0D4F0CBD5B4843 /* expo.icon */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = expo.icon; path = SnapVocab/expo.icon; sourceTree = "<group>"; };
+		A089BE440AACE3000CDDD5AE /* libPods-SnapVocab.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-SnapVocab.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = SnapVocab/SplashScreen.storyboard; sourceTree = "<group>"; };
+		AD8FA99CA2334A75BAFA60C7 /* SceneDelegate.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = SnapVocab/SceneDelegate.swift; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		C49D7E8FA634654594A1C391 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = SnapVocab/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		E7D2A9A2E9E8084750896B37 /* Pods-SnapVocab.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SnapVocab.debug.xcconfig"; path = "Target Support Files/Pods-SnapVocab/Pods-SnapVocab.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = SnapVocab/AppDelegate.swift; sourceTree = "<group>"; };
-		0A1D733D6A318D9BED34A515 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = SnapVocab/SceneDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* SnapVocab-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "SnapVocab-Bridging-Header.h"; path = "SnapVocab/SnapVocab-Bridging-Header.h"; sourceTree = "<group>"; };
-		F88B2577FA7D7F0F275B17A9 /* Pods-SnapVocab.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SnapVocab.release.xcconfig"; path = "Target Support Files/Pods-SnapVocab/Pods-SnapVocab.release.xcconfig"; sourceTree = "<group>"; };
-		FF258DE1F172221161921108 /* libPods-SnapVocab.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-SnapVocab.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,7 +41,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4AF3CE1FF10B613AD0A2C66E /* libPods-SnapVocab.a in Frameworks */,
+				792638D1D0A6151E29CEF76F /* libPods-SnapVocab.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -52,22 +52,14 @@
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
-				0A1D733D6A318D9BED34A515 /* SceneDelegate.swift */,
 				F11748442D0722820044C1D9 /* SnapVocab-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				5570419562B74AF5A079B16D /* expo.icon */,
-				C49D7E8FA634654594A1C391 /* PrivacyInfo.xcprivacy */,
-			);
-			name = SnapVocab;
-			sourceTree = "<group>";
-		};
-		22D8AD200A6EEF57157BAB9A /* SnapVocab */ = {
-			isa = PBXGroup;
-			children = (
-				0FB60E2AF35953B535C4469B /* ExpoModulesProvider.swift */,
+				564E1D421F0D4F0CBD5B4843 /* expo.icon */,
+				AD8FA99CA2334A75BAFA60C7 /* SceneDelegate.swift */,
+				51BBA624A2B29F4DCB764818 /* PrivacyInfo.xcprivacy */,
 			);
 			name = SnapVocab;
 			sourceTree = "<group>";
@@ -76,17 +68,19 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				FF258DE1F172221161921108 /* libPods-SnapVocab.a */,
+				A089BE440AACE3000CDDD5AE /* libPods-SnapVocab.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		3C645551A06951B2C6514222 /* ExpoModulesProviders */ = {
+		51DCF242654937D42E95F168 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				22D8AD200A6EEF57157BAB9A /* SnapVocab */,
+				E7D2A9A2E9E8084750896B37 /* Pods-SnapVocab.debug.xcconfig */,
+				12CBDA1CBAD8B1A75B4986F3 /* Pods-SnapVocab.release.xcconfig */,
 			);
-			name = ExpoModulesProviders;
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -103,8 +97,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				944DC029A24F072F982972F4 /* Pods */,
-				3C645551A06951B2C6514222 /* ExpoModulesProviders */,
+				51DCF242654937D42E95F168 /* Pods */,
+				9669B9F2C6DFE0C733CD46C8 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -119,14 +113,20 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		944DC029A24F072F982972F4 /* Pods */ = {
+		9650E40F67169AC22A882B79 /* SnapVocab */ = {
 			isa = PBXGroup;
 			children = (
-				A276CF1460FBE59781474A92 /* Pods-SnapVocab.debug.xcconfig */,
-				F88B2577FA7D7F0F275B17A9 /* Pods-SnapVocab.release.xcconfig */,
+				551B62083EEBE5C828B10B21 /* ExpoModulesProvider.swift */,
 			);
-			name = Pods;
-			path = Pods;
+			name = SnapVocab;
+			sourceTree = "<group>";
+		};
+		9669B9F2C6DFE0C733CD46C8 /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				9650E40F67169AC22A882B79 /* SnapVocab */,
+			);
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -146,13 +146,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "SnapVocab" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				984634B366C72DD9F6EC1B08 /* [Expo] Configure project */,
+				CB318ABF10CD7BA5A5247406 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				0455435F0C919B811F1542A8 /* [CP] Embed Pods Frameworks */,
+				8F7E93D96AE748EB9862E0E0 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -202,8 +202,8 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				77289B044B0D479F8ED2766E /* expo.icon in Resources */,
-				496FF892698C9DA0D5D1E789 /* PrivacyInfo.xcprivacy in Resources */,
+				5A72320B08F54C4BBA8A7059 /* expo.icon in Resources */,
+				238B0CC1564E619825E57F7B /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -227,7 +227,63 @@
 			shellPath = /bin/sh;
 			shellScript = "if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env\"\nfi\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n# The project root by default is one level up from the ios directory\nexport PROJECT_ROOT=\"$PROJECT_DIR\"/..\n\nif [[ \"$CONFIGURATION\" = *Debug* ]]; then\n  export SKIP_BUNDLING=1\nfi\nif [[ -z \"$ENTRY_FILE\" ]]; then\n  # Set the entry JS file using the bundler's entry resolution.\n  export ENTRY_FILE=\"$(\"$NODE_BINARY\" -e \"require('expo/scripts/resolveAppEntry')\" \"$PROJECT_ROOT\" ios absolute | tail -n 1)\"\nfi\n\nif [[ -z \"$CLI_PATH\" ]]; then\n  # Use Expo CLI\n  export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"\nfi\nif [[ -z \"$BUNDLE_COMMAND\" ]]; then\n  # Default Expo CLI command for bundling\n  export BUNDLE_COMMAND=\"export:embed\"\nfi\n\n# Source .xcode.env.updates if it exists to allow\n# SKIP_BUNDLING to be unset if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.updates\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.updates\"\nfi\n# Source local changes to allow overrides\n# if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\"`\n\n";
 		};
-		0455435F0C919B811F1542A8 /* [CP] Embed Pods Frameworks */ = {
+		08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-SnapVocab-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-SnapVocab/Pods-SnapVocab-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoDevice/ExpoDevice_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoSystemUI/ExpoSystemUI_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/React-Core_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-timing/React-timing_privacy.bundle",
+				"${PODS_ROOT}/../../node_modules/@react-native-vector-icons/material-icons/fonts/MaterialIcons.ttf",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoConstants_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoDevice_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoFileSystem_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoSystemUI_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-Core_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-cxxreact_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-timing_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/MaterialIcons.ttf",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SnapVocab/Pods-SnapVocab-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		8F7E93D96AE748EB9862E0E0 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -273,61 +329,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SnapVocab/Pods-SnapVocab-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-SnapVocab-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-SnapVocab/Pods-SnapVocab-resources.sh",
-				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoDevice/ExpoDevice_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoSystemUI/ExpoSystemUI_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/React-Core_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/React-timing/React-timing_privacy.bundle",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoConstants_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoDevice_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoFileSystem_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoSystemUI_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-Core_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-cxxreact_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-timing_privacy.bundle",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SnapVocab/Pods-SnapVocab-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		984634B366C72DD9F6EC1B08 /* [Expo] Configure project */ = {
+		CB318ABF10CD7BA5A5247406 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -359,8 +361,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				FF7D62B59096A5DE64EAE742 /* SceneDelegate.swift in Sources */,
-				9217EEE21D5970052970C98A /* ExpoModulesProvider.swift in Sources */,
+				A29D38F864294C36AEF87BAF /* SceneDelegate.swift in Sources */,
+				251C6366A9AC8DA5E710E5F2 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -369,7 +371,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A276CF1460FBE59781474A92 /* Pods-SnapVocab.debug.xcconfig */;
+			baseConfigurationReference = E7D2A9A2E9E8084750896B37 /* Pods-SnapVocab.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = expo;
 				CLANG_ENABLE_MODULES = YES;
@@ -395,18 +397,18 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.quangahn.x27.SnapVocab;
-				PRODUCT_NAME = SnapVocab;
+				PRODUCT_NAME = "SnapVocab";
 				SWIFT_OBJC_BRIDGING_HEADER = "SnapVocab/SnapVocab-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = F88B2577FA7D7F0F275B17A9 /* Pods-SnapVocab.release.xcconfig */;
+			baseConfigurationReference = 12CBDA1CBAD8B1A75B4986F3 /* Pods-SnapVocab.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = expo;
 				CLANG_ENABLE_MODULES = YES;
@@ -427,10 +429,10 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.quangahn.x27.SnapVocab;
-				PRODUCT_NAME = SnapVocab;
+				PRODUCT_NAME = "SnapVocab";
 				SWIFT_OBJC_BRIDGING_HEADER = "SnapVocab/SnapVocab-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
