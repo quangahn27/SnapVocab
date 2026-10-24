@@ -202,13 +202,21 @@ export default function SnapVocabScreen() {
               </>
             ) : (
               <>
-                <View style={styles.titleBlock}>
-                  <Text style={styles.appTitle}>SnapVocab</Text>
-                  {screenState === 'EMPTY' && (
-                    <Text style={styles.appSubtitle}>
-                      Học {languageName} từ thế giới xung quanh bạn.
-                    </Text>
-                  )}
+                <View style={styles.titleRow}>
+                  <Image
+                    source={require('@/assets/images/logo-mark.png')}
+                    style={styles.titleMark}
+                    contentFit="contain"
+                    accessibilityIgnoresInvertColors
+                  />
+                  <View style={styles.titleBlock}>
+                    <Text style={styles.appTitle}>SnapVocab</Text>
+                    {screenState === 'EMPTY' && (
+                      <Text style={styles.appSubtitle}>
+                        Học {languageName} từ thế giới xung quanh bạn.
+                      </Text>
+                    )}
+                  </View>
                 </View>
                 <LanguagePicker
                   value={language}
@@ -392,7 +400,19 @@ const styles = StyleSheet.create({
   sectionIntro: {
     gap: 6,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  titleMark: {
+    width: 44,
+    height: 44,
+  },
   titleBlock: {
+    // `flex: 1` so a long subtitle wraps inside the row instead of pushing the
+    // mark off the edge.
+    flex: 1,
     gap: 6,
   },
   appTitle: {
